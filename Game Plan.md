@@ -1,0 +1,74 @@
+- Initialization
+	- static int global variable that shows whether heap is initialized
+	- Create header with 5 bytes
+		- Header is array within array
+		- Header[8];
+		- Contain info for size of chunk, and whether it is used
+			- Two variables
+				- int used = 0 or 1
+				- int sizeOfChunk = 0 to 4088
+- Header function
+	- 
+	- char* createHeader(size_t size)
+		- 
+- `malloc`
+	- `mymalloc(size_t size, char file, int line);`
+	- Steps
+		- Find free header (used = 0)
+			- Start at the beginning of array
+				- heap.bytes[0]
+				- Read 4 bytes afterwards to check whether 0 or 1
+					- If (int == 0) 
+						- continue
+				- Read 4 bytes after char to check sizeOfChunk
+					- If (sizeOfChunk >= size_t size) 
+						- continute
+				- If either "if" statements are wrong
+					- Jump ahead sizeOfChunk+8
+				- Repeat
+		- Update size_t size to a multiple of 8
+			- (size_t size + 7) & ~7
+		- Find header with desired amount of bytes (sizeOfChunk >= size_t size)
+			- Steps are shown above
+		- Update header to used = 1
+		- Update sizeOfChunk = size_t size
+			- Before doing this, keep sizeOfChunk - size_t size in temp variable (freeSpaceRemaining) for information when creating new header
+		- Create new header at the end of chunk
+			- Check to see if header is already at the end of chunk
+				- Using sizeOfChunk and knowledge that headers are 8 bytes (and freeSpaceRemaining variable)
+- `void myfree(void ptr, char file, int line);`
+	- ptr points to beginning of payload
+	- Check that 8 bytes before ptr is a header
+		- Traverse bytes
+			- Header jumping baby
+				- Check header at beginning of heap
+				- Jump to sizeOfChunk + 8 to get to next header
+				- Repeat until we get to ptr header
+					- Check to see that 8 bytes before ptr header are an actual header according to header jumping
+					- Check to make sure used = 1
+				- If we find error, print it out
+		- If true, update header
+			- used = 0
+	- Check to see if there is a free header at the end of the chunk
+		- Do this by traversing sizeOfChunk amount of bytes and check header (used = 0)
+		- If true
+			- get sizeOfChunk of second header (store in temp variable)
+			- Go back to header pointed by void ptr and update sizeOfChunk to add temp variable sizeOfChunk in second header
+	- Check to see if there is a free header BEFORE the void ptr chunk
+		- store sizeOfChunk of current header in temp variable
+		- Traverse entire bytes array until you end up at header before void ptr
+			- Check to see if that header is free
+				- If true
+					- sizeOfChunk = sizeOfChunk + temp variable
+- `void checkLeaks()`
+	- feed it to atexit()
+		- Run during initalization method
+	- Ensure there is one pointer at the start which has sizeOfChunk = 4088 and used = 0
+	- If not true
+		- Two variables
+			- Amount of bytes leaked
+			- Amount of objects leaked
+		- Header jump
+			- For every header with used = 1
+				- Amount of bytes leaked += sizeOfChunk
+				- Amount of objects leaked ++
