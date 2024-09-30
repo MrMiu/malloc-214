@@ -20,6 +20,11 @@ void initializeHeap()
 	header[SIZE_OF_CHUNK] = MEMLENGTH - HEADER_SIZE;
 }
 
+void coalesce(int *prevHeader, int *nextHeader)
+{
+	prevHeader[SIZE_OF_CHUNK] += HEADER_SIZE + nextHeader[SIZE_OF_CHUNK];
+}
+
 void myfree(void *ptr, char *file, int line)
 {
 	if(!initialized)
@@ -54,7 +59,7 @@ void myfree(void *ptr, char *file, int line)
 		int *nextHeader = (int *) (chunk + header[SIZE_OF_CHUNK]);
 		if(!nextHeader[USED])
 		{
-			header[SIZE_OF_CHUNK] += + HEADER_SIZE + nextHeader[SIZE_OF_CHUNK];
+			coalesce(header, nextHeader);
 		}
 	}
 	char *prev;
@@ -68,6 +73,6 @@ void myfree(void *ptr, char *file, int line)
 	int *prevHeader = (int *) prev;
 	if(!prevHeader[USED])
 	{
-		prevHeader[SIZE_OF_CHUNK] += HEADER_SIZE + header[SIZE_OF_CHUNK];
+		coalesce(prevHeader, header);
 	}
 }
