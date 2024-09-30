@@ -6,11 +6,44 @@
 #define USED 0
 #define SIZE_OF_CHUNK 1 
 #define MEMLENGTH 4096
+
 static union {
   char bytes[MEMLENGTH];
   double not_used;
 } heap;
 static int initialized = 0;
+
+void initializeHeap();
+void coalesce(int *prevHeader, int *nextHeader);
+char isUsedChunk(void *ptr);
+int *nextHeader(int *header);
+int *prevHeader(int *header);
+int *getHeader(void *ptr);
+
+void myfree(void *ptr, char *file, int line)
+{
+	if(!initialized)
+	{
+		initializeHeap();
+	}
+	if(!isUsedChunk(ptr))
+	{
+		fprintf(stderr, "Inappropriate pointer (%s:%d)\n", file, line);
+		exit(2);
+	}
+	int *header = getHeader(ptr);
+	header[USED] = 0;
+	int *nextHeader = nextHeader(header);
+	if((nextHeader != NULL) && !nextHeader[USED])
+	{
+		coalesce(header, nextHeader);
+	}
+	int *prevHeader = prevHeader(header);
+	if((prevHeader != NULL) && !prevHeader[USED])
+	{
+		coalesce(prevHeader, header);
+	}
+}
 
 /* Sets initialized equal to 1.
 Creates a chunk that occupies the entirety of heap.bytes. */
@@ -87,27 +120,3 @@ int *getHeader(void *ptr)
 	return (int *) headerPointer;
 }
 
-void myfree(void *ptr, char *file, int line)
-{
-	if(!initialized)
-	{
-		initializeHeap();
-	}
-	if(!isUsedChunk(ptr))
-	{
-		fprintf(stderr, "Inappropriate pointer (%s:%d)\n", file, line);
-		exit(2);
-	}
-	int *header = getHeader(ptr);
-	header[USED] = 0;
-	int *nextHeader = nextHeader(header);
-	if((nextHeader != NULL) && !nextHeader[USED])
-	{
-		coalesce(header, nextHeader);
-	}
-	int *prevHeader = prevHeader(header);
-	if((prevHeader != NULL) && !prevHeader[USED])
-	{
-		coalesce(prevHeader, header);
-	}
-}
