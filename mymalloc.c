@@ -8,9 +8,22 @@ static union {
   char bytes[MEMLENGTH];
   double not_used;
 } heap;
+static int initialized = 0;
+
+void initializeHeap()
+{
+	initialized = 1;
+	int *header = (int *) heap.bytes;
+	header[0] = 0;
+	header[1] = MEMLENGTH - HEADER_SIZE;
+}
 
 void myfree(void *ptr, char *file, int line)
 {
+	if(!initialized)
+	{
+		initializeHeap();
+	}
 	int isAllocatedChunk = 0;
 	char *headerPointer = heap.bytes;
 	while(headerPointer < heap.bytes + MEMLENGTH)
