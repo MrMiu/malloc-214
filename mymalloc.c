@@ -25,28 +25,31 @@ void coalesce(int *prevHeader, int *nextHeader)
 	prevHeader[SIZE_OF_CHUNK] += HEADER_SIZE + nextHeader[SIZE_OF_CHUNK];
 }
 
+char isAllocatedChunk(void *ptr)
+{
+	char isAllocatedChunk = 0;
+	char *headerPointer = heap.bytes;
+	while(headerPointer < heap.bytes + MEMLENGTH)
+	{
+		int *header = (int *) headerPointer;
+		char *chunk = headerPointer + HEADER_SIZE;
+		if(chunk >= ptr)
+		{
+			isAllocatedChunk = (chunk == ptr) && (header[USED]);
+			break;
+		}
+		headerPointer = chunk + header[SIZE_OF_CHUNK];
+	}
+	return isAllocatedChunk;
+}
+
 void myfree(void *ptr, char *file, int line)
 {
 	if(!initialized)
 	{
 		initializeHeap();
 	}
-	int isAllocatedChunk = 0;
-	char *headerPointer = heap.bytes;
-	while(headerPointer < heap.bytes + MEMLENGTH)
-	{
-		int *header = (int *) headerPointer;
-		int *used = header;
-		char *chunk = headerPointer + HEADER_SIZE;
-		if(chunk >= ptr)
-		{
-			isAllocatedChunk = (chunk == ptr) && (*used);
-			break;
-		}
-		int *sizeOfChunk = header + 1;
-		headerPointer = chunk + *sizeOfChunk;
-	}
-	if(!isAllocatedChunk)
+	if(!isAllocatedChunk(ptr))
 	{
 		fprintf(stderr, "Inappropriate pointer (%s:%d)\n", file, line);
 		exit(2);
