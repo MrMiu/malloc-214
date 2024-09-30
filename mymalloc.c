@@ -65,7 +65,6 @@ void coalesce(int *prevHeader, int *nextHeader)
 /* Returns 1 if ptr points to the beginning of a used chunk. */
 char isUsedChunk(void *ptr)
 {
-	char isAllocatedChunk = 0;
 	char *headerPointer = heap.bytes;
 	while(headerPointer < heap.bytes + MEMLENGTH)
 	{
@@ -73,12 +72,11 @@ char isUsedChunk(void *ptr)
 		char *chunk = headerPointer + HEADER_SIZE;
 		if(chunk >= ptr)
 		{
-			isAllocatedChunk = (chunk == ptr) && (header[USED]);
-			break;
+			return (chunk == ptr) && header[USED];
 		}
 		headerPointer = chunk + header[SIZE_OF_CHUNK];
 	}
-	return isAllocatedChunk;
+	return 0;
 }
 
 /* Returns the header of the chunk after the given header.
