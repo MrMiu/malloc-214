@@ -3,6 +3,8 @@
 #include <unistd.h>
 
 #define HEADER_SIZE 2 * sizeof(int)
+#define USED 0
+#define SIZE_OF_CHUNK 1 
 #define MEMLENGTH 4096
 static union {
   char bytes[MEMLENGTH];
@@ -14,8 +16,8 @@ void initializeHeap()
 {
 	initialized = 1;
 	int *header = (int *) heap.bytes;
-	header[0] = 0;
-	header[1] = MEMLENGTH - HEADER_SIZE;
+	header[USED] = 0;
+	header[SIZE_OF_CHUNK] = MEMLENGTH - HEADER_SIZE;
 }
 
 void myfree(void *ptr, char *file, int line)
@@ -46,13 +48,13 @@ void myfree(void *ptr, char *file, int line)
 	}
 	char *chunk = (char *) ptr;
 	int *header = (int *) (startOfChunk - HEADER_SIZE);
-	header[0] = 0;
-	if(chunk + header[1] < heap.bytes + MEMLENGTH)
+	header[USED] = 0;
+	if(chunk + header[SIZE_OF_CHUNK] < heap.bytes + MEMLENGTH)
 	{
-		int *nextHeader = (int *) (chunk + header[1]);
-		if(!nextHeader[0])
+		int *nextHeader = (int *) (chunk + header[SIZE_OF_CHUNK]);
+		if(!nextHeader[USED])
 		{
-			header[1] += + HEADER_SIZE + nextHeader[1];
+			header[SIZE_OF_CHUNK] += + HEADER_SIZE + nextHeader[SIZE_OF_CHUNK];
 		}
 	}
 	char *prev;
@@ -61,12 +63,11 @@ void myfree(void *ptr, char *file, int line)
 	{
 		prev = next;
 		int *prevHeader = (int *) prev;
-		int prevChunkSize = prevHeader[1];
-		next = prev + HEADER_SIZE + prevChunkSize;
+		next = prev + HEADER_SIZE + prevHeader[SIZE_OF_CHUNK];
 	}
 	int *prevHeader = (int *) prev;
-	if(!prevHeader[0])
+	if(!prevHeader[USED])
 	{
-		prevHeader[1] += HEADER_SIZE + header[1];
+		prevHeader[SIZE_OF_CHUNK] += HEADER_SIZE + header[SIZE_OF_CHUNK];
 	}
 }
