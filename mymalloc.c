@@ -12,6 +12,8 @@ static union {
 } heap;
 static int initialized = 0;
 
+/* Sets initialized equal to 1.
+Creates a chunk that occupies the entirety of heap.bytes. */
 void initializeHeap()
 {
 	initialized = 1;
@@ -20,12 +22,15 @@ void initializeHeap()
 	header[SIZE_OF_CHUNK] = MEMLENGTH - HEADER_SIZE;
 }
 
+/* Coalesces the chunks corresponding to prevHeader and nextHeader.
+Assumes prevHeader < nextHeader. */
 void coalesce(int *prevHeader, int *nextHeader)
 {
 	prevHeader[SIZE_OF_CHUNK] += HEADER_SIZE + nextHeader[SIZE_OF_CHUNK];
 }
 
-char isAllocatedChunk(void *ptr)
+/* Returns 1 if ptr points to the beginning of a used chunk. */
+char isUsedChunk(void *ptr)
 {
 	char isAllocatedChunk = 0;
 	char *headerPointer = heap.bytes;
@@ -43,6 +48,8 @@ char isAllocatedChunk(void *ptr)
 	return isAllocatedChunk;
 }
 
+/* Returns the header of the chunk after the given header.
+Returns NULL if header is the last header in heap.bytes. */
 int *nextHeader(int *header)
 {
 	char *next = (char *) header + HEADER_SIZE + header[SIZE_OF_CHUNK];
@@ -53,6 +60,8 @@ int *nextHeader(int *header)
 	return (int *) next;
 }
 
+/* Returns the header of the chunk before the given header.
+Returns NULL if header is the first header in heap.bytes. */
 int *prevHeader(int *header)
 {
 	if(header == heap.bytes)
@@ -70,6 +79,7 @@ int *prevHeader(int *header)
 	return (int *) prev;
 }
 
+/* Returns the header of the chunk pointed to by ptr. */
 int *getHeader(void *ptr)
 {
 	char *chunk = (char *) ptr;
@@ -83,7 +93,7 @@ void myfree(void *ptr, char *file, int line)
 	{
 		initializeHeap();
 	}
-	if(!isAllocatedChunk(ptr))
+	if(!isUsedChunk(ptr))
 	{
 		fprintf(stderr, "Inappropriate pointer (%s:%d)\n", file, line);
 		exit(2);
