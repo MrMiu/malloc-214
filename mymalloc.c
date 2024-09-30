@@ -43,6 +43,40 @@ char isAllocatedChunk(void *ptr)
 	return isAllocatedChunk;
 }
 
+int *nextHeader(int *header)
+{
+	char *next = (char *) header + HEADER_SIZE + header[SIZE_OF_CHUNK];
+	if(next == heap.bytes + MEMLENGTH)
+	{
+		return NULL;
+	}
+	return (int *) next;
+}
+
+int *prevHeader(int *header)
+{
+	if(header == heap.bytes)
+	{
+		return NULL;
+	}
+	char *prev;
+	char *next = heap.bytes;
+	while(next < header)
+	{
+		prev = next;
+		int *prevHeader = (int *) prev;
+		next = nextHeader(prevHeader);
+	}
+	return (int *) prev;
+}
+
+int *getHeader(void *ptr)
+{
+	char *chunk = (char *) ptr;
+	char *headerPointer = chunk - HEADER_SIZE;
+	return (int *) headerPointer;
+}
+
 void myfree(void *ptr, char *file, int line)
 {
 	if(!initialized)
@@ -54,27 +88,15 @@ void myfree(void *ptr, char *file, int line)
 		fprintf(stderr, "Inappropriate pointer (%s:%d)\n", file, line);
 		exit(2);
 	}
-	char *chunk = (char *) ptr;
-	int *header = (int *) (startOfChunk - HEADER_SIZE);
+	int *header = getHeader(ptr);
 	header[USED] = 0;
-	if(chunk + header[SIZE_OF_CHUNK] < heap.bytes + MEMLENGTH)
+	int *nextHeader = nextHeader(header);
+	if((nextHeader != NULL) && !nextHeader[USED])
 	{
-		int *nextHeader = (int *) (chunk + header[SIZE_OF_CHUNK]);
-		if(!nextHeader[USED])
-		{
-			coalesce(header, nextHeader);
-		}
+		coalesce(header, nextHeader);
 	}
-	char *prev;
-	char *next = heap.bytes;
-	while(next < header)
-	{
-		prev = next;
-		int *prevHeader = (int *) prev;
-		next = prev + HEADER_SIZE + prevHeader[SIZE_OF_CHUNK];
-	}
-	int *prevHeader = (int *) prev;
-	if(!prevHeader[USED])
+	int *prevHeader = prevHeader(header);
+	if((prevHeader != NULL) && !prevHeader[USED])
 	{
 		coalesce(prevHeader, header);
 	}
