@@ -6,7 +6,7 @@
 
 #include "mymalloc.h"
 
-#define HEADER_SIZE 2 * sizeof(int)
+#define HEADER_SIZE (2 * sizeof(int))
 #define USED 0
 #define SIZE_OF_CHUNK 1 
 #define MEMLENGTH 4096
