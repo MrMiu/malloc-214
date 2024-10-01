@@ -40,7 +40,7 @@ void *mymalloc(size_t size, char *file, int line) {
 
   // Checking to ensure if creation of header is needed
   // TODO: Code logic is wrong. Need to ensure there is no header at sizeOfChunkandLocation
-  int sizeOfChunkandLocation = indexOfHeader + 8 + sizeOfPayload
+  int sizeOfChunkandLocation = indexOfHeader + 8 + sizeOfPayload;
   if (MEMLENGTH - (sizeOfChunkandLocation) != 0) {
     // Point these pointers to supposed header in heap
     isUsedPtr = heap.bytes + indexOfHeader + *sizeOfPayloadPtr;
