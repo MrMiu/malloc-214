@@ -78,15 +78,15 @@ void myfree(void *ptr, char *file, int line)
 	}
 	int *header = getHeader(ptr);
 	header[USED] = 0;
-	int *nextHeader = nextHeader(header);
-	if((nextHeader != NULL) && !nextHeader[USED])
+	int *next = nextHeader(header);
+	if((next != NULL) && !next[USED])
 	{
-		coalesce(header, nextHeader);
+		coalesce(header, next);
 	}
-	int *prevHeader = prevHeader(header);
-	if((prevHeader != NULL) && !prevHeader[USED])
+	int *prev = prevHeader(header);
+	if((prev != NULL) && !prev[USED])
 	{
-		coalesce(prevHeader, header);
+		coalesce(prev, header);
 	}
 }
 
