@@ -111,13 +111,14 @@ void coalesce(int *prevHeader, int *nextHeader)
 char isUsedChunk(void *ptr)
 {
 	char *headerPointer = heap.bytes;
+	char *charPointer = (char *) ptr;
 	while(headerPointer < heap.bytes + MEMLENGTH)
 	{
 		int *header = (int *) headerPointer;
 		char *chunk = headerPointer + HEADER_SIZE;
-		if(chunk >= ptr)
+		if(chunk >= charPointer)
 		{
-			return (chunk == ptr) && header[USED];
+			return (chunk == charPointer) && header[USED];
 		}
 		headerPointer = chunk + header[SIZE_OF_CHUNK];
 	}
@@ -140,17 +141,17 @@ int *nextHeader(int *header)
 Returns NULL if header is the first header in heap.bytes. */
 int *prevHeader(int *header)
 {
-	if(header == heap.bytes)
+	if((char *) header == heap.bytes)
 	{
 		return NULL;
 	}
 	char *prev;
 	char *next = heap.bytes;
-	while(next < header)
+	while(next < (char *) header)
 	{
 		prev = next;
-		int *prevHeader = (int *) prev;
-		next = nextHeader(prevHeader);
+		int *prevHead = (int *) prev;
+		next = (char *) nextHeader(prevHead);
 	}
 	return (int *) prev;
 }
