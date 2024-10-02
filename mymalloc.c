@@ -32,11 +32,21 @@ void *mymalloc(size_t size, char *file, int line) {
   // Check to see if there is a header next to the header selected
   int avaliableHeader = 0;
 
+  // Find next header location
+  int nextHeaderLocation = 0;
+
   // Header jumping: continue going to headers until free header
   // TODO: CHECK TO ENSURE NO INDEX-OUT-BOUNDS WHEN HEADER JUMPING TO THE END
   while ((isUsed != 0) || (sizeOfPayload >= newSize)) {
     tempSizeOfPayload = sizeOfPayload;
-    indexOfHeader = HEADER_SIZE + sizeOfPayload;
+    nextHeaderLocation = HEADER_SIZE + sizeOfPayload;
+    // If header location reaches end of array, cannot allocate bytes
+    if (nextHeaderLocation >= MEMLENGTH) {
+        size_t totalBytes = size * sizeof(size_t);
+        fprintf(stderr, "Unable to allocate %zu bytes (%s:%d)\n", totalBytes, file, line);
+        return NULL;
+    }
+    indexOfHeader = nextHeader;
 
     isUsed = (*(int*) heap.bytes) + HEADER_SIZE + sizeOfPayload;
     sizeOfPayload = (*(int*) heap.bytes) + 12 + tempSizeOfPayload;
@@ -73,31 +83,6 @@ char isUsedChunk(void *ptr);
 int *nextHeader(int *header);
 int *prevHeader(int *header);
 int *getHeader(void *ptr);
-
-void myfree(void *ptr, char *file, int line)
-{
-	if(!initialized)
-	{
-		initializeHeap();
-	}
-	if(!isUsedChunk(ptr))
-	{
-		fprintf(stderr, "Inappropriate pointer (%s:%d)\n", file, line);
-		exit(2);
-	}
-	int *header = getHeader(ptr);
-	header[USED] = 0;
-	int *next = nextHeader(header);
-	if((next != NULL) && !next[USED])
-	{
-		coalesce(header, next);
-	}
-	int *prev = prevHeader(header);
-	if((prev != NULL) && !prev[USED])
-	{
-		coalesce(prev, header);
-	}
-}
 
 /* Sets initialized equal to 1.
 Creates a chunk that occupies the entirety of heap.bytes. */
@@ -171,4 +156,29 @@ int *getHeader(void *ptr)
 	char *chunk = (char *) ptr;
 	char *headerPointer = chunk - HEADER_SIZE;
 	return (int *) headerPointer;
+}
+
+void myfree(void *ptr, char *file, int line)
+{
+	if(!initialized)
+	{
+		initializeHeap();
+	}
+	if(!isUsedChunk(ptr))
+	{
+		fprintf(stderr, "Inappropriate pointer (%s:%d)\n", file, line);
+		exit(2);
+	}
+	int *header = getHeader(ptr);
+	header[USED] = 0;
+	int *next = nextHeader(header);
+	if((next != NULL) && !next[USED])
+	{
+		coalesce(header, next);
+	}
+	int *prev = prevHeader(header);
+	if((prev != NULL) && !prev[USED])
+	{
+		coalesce(prev, header);
+	}
 }
