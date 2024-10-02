@@ -44,39 +44,45 @@ void *mymalloc(size_t size, char *file, int line) {
         return NULL;
     }
 
-    isUsed = (*(int*) heap.bytes) + currentHeaderLocation;
-    sizeOfPayload = (*(int*) heap.bytes) + currentHeaderLocation + 4;
+    isUsed = *(int*) heap.bytes + currentHeaderLocation;
+    sizeOfPayload = *(int*) heap.bytes + currentHeaderLocation + 4;
   }
 
   nextHeaderLocation = currentHeaderLocation + HEADER_SIZE + sizeOfPayload;
+  // TODO: Better way to deal with this edge-case
 
   if ((nextHeaderLocation + HEADER_SIZE) < MEMLENGTH) {
 	avaliableHeader = 1;
   }
 
   // Update current header values
-  int *isUsedPtr = (int*) heap.bytes + currentHeaderLocation;
-  int *sizeOfPayloadPtr = (int*) heap.bytes + currentHeaderLocation + 4;
+  int *isUsedPtr = (int*) (heap.bytes + currentHeaderLocation);
+  int *sizeOfPayloadPtr = (int*) (heap.bytes + currentHeaderLocation + 4);
   *isUsedPtr = 1;
   *sizeOfPayloadPtr = newSize; 
 
   // CASE 1: If there are no more headers until the end of heap
   // CASE 2: If next header is directly after payload of current chunk
-  if ((avaliableHeader == 0) || (nextHeaderLocation == currentHeaderLocation + HEADER_SIZE + newSize)) {
-    return isUsedPtr;
+  // No need to modify/create any headers. End program
+  if ((avaliableHeader == 0) || (nextHeaderLocation == (currentHeaderLocation + HEADER_SIZE + newSize))) {
+	// Explicitly skip this case (Will modifiy at a later date)
+  }
+  // CASE 3: Create header inbetween current header and end of heap
+  // Point these pointers to supposed header in heap
+  else if (nextHeaderLocation == MEMLENGTH) {
+	int *nextIsUsedPtr = (int*) (heap.bytes + currentHeaderLocation + HEADER_SIZE + newSize);
+  	int *nextSizeOfPayloadPtr = (int*) (heap.bytes + currentHeaderLocation + HEADER_SIZE + 4 + newSize);
+	*nextIsUsedPtr = 0;
+  	*nextSizeOfPayloadPtr = MEMLENGTH - (currentHeaderLocation + HEADER_SIZE + newSize + HEADER_SIZE);
+  } else {
+	// CASE 4: Create header inbetween current header and next header
+	int *nextIsUsedPtr = (int*) (heap.bytes + currentHeaderLocation + HEADER_SIZE + newSize);
+	int *nextSizeOfPayloadPtr = (int*) (heap.bytes + currentHeaderLocation + HEADER_SIZE + 4 + newSize);
+	*nextIsUsedPtr = 0;
+	*nextSizeOfPayloadPtr = nextHeaderLocation - (currentHeaderLocation + HEADER_SIZE + newSize + HEADER_SIZE);
   }
 
-  printf("nextHeaderLocation: %d", nextHeaderLocation);
-  // CASE 3: Create header inbetween current header and next header
-  // Point these pointers to supposed header in heap
-  int *nextIsUsedPtr = (int*) heap.bytes + currentHeaderLocation + HEADER_SIZE + newSize;
-  int *nextSizeOfPayloadPtr = (int*) heap.bytes + currentHeaderLocation + HEADER_SIZE + 4 + newSize;
-
-  // Create values for new header
-  *nextIsUsedPtr = 0;
-  *nextSizeOfPayloadPtr = nextHeaderLocation - (currentHeaderLocation + HEADER_SIZE);
-
-  return isUsedPtr;
+  return (isUsedPtr + HEADER_SIZE);
 }
 
 static int initialized = 0;
@@ -190,7 +196,7 @@ void myfree(void *ptr, char *file, int line)
 int main() {
     initializeHeap();
     char* asdf = malloc(sizeof(char) * 4088);
-    asdf[0] = 'A';
-    printf("%s\n", asdf);
+	free(asdf);
+    // printf("%s\n%s\n", test, jkli);
     return 0;
 }
