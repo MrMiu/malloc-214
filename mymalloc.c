@@ -16,74 +16,6 @@ static union {
   double not_used;
 } heap;
 
-void *mymalloc(size_t size, char *file, int line) {
-  
-  int newSize = (size + 7) & ~7;
-
-  // Access two values of starting header
-  int isUsed = *(int*) heap.bytes;
-  int sizeOfPayload = *(int*) (heap.bytes + 4);
-
-  // Used for updating header
-  int currentHeaderLocation = 0;
-
-  // Check if there is another header after current one
-  int avaliableHeader = 0;
-
-  // Find next header location
-  int nextHeaderLocation = 0;
-
-  // Header jumping: continue going to headers until free header
-  // TODO: Potentially use pointers for currentHeaderLocation and nextHeaderLocation
-  while (!(isUsed != 0) && !(sizeOfPayload >= newSize)) {
-    currentHeaderLocation = HEADER_SIZE + sizeOfPayload;
-    // If header location reaches end of array, cannot allocate bytes
-    if (currentHeaderLocation >= MEMLENGTH) {
-        size_t totalBytes = size * sizeof(size_t);
-        fprintf(stderr, "Unable to allocate %zu bytes (%s:%d)\n", totalBytes, file, line);
-        return NULL;
-    }
-
-    isUsed = *(int*) heap.bytes + currentHeaderLocation;
-    sizeOfPayload = *(int*) heap.bytes + currentHeaderLocation + 4;
-  }
-
-  nextHeaderLocation = currentHeaderLocation + HEADER_SIZE + sizeOfPayload;
-  // TODO: Better way to deal with this edge-case
-
-  if ((nextHeaderLocation + HEADER_SIZE) < MEMLENGTH) {
-	avaliableHeader = 1;
-  }
-
-  // Update current header values
-  int *isUsedPtr = (int*) (heap.bytes + currentHeaderLocation);
-  int *sizeOfPayloadPtr = (int*) (heap.bytes + currentHeaderLocation + 4);
-  *isUsedPtr = 1;
-  *sizeOfPayloadPtr = newSize; 
-
-  // CASE 1: If there are no more headers until the end of heap
-  // CASE 2: If next header is directly after payload of current chunk
-  // No need to modify/create any headers. End program
-  if ((avaliableHeader == 0) || (nextHeaderLocation == (currentHeaderLocation + HEADER_SIZE + newSize))) {
-	// Explicitly skip this case (Will modifiy at a later date)
-  }
-  // CASE 3: Create header inbetween current header and end of heap
-  // Point these pointers to supposed header in heap
-  else if (nextHeaderLocation == MEMLENGTH) {
-	int *nextIsUsedPtr = (int*) (heap.bytes + currentHeaderLocation + HEADER_SIZE + newSize);
-  	int *nextSizeOfPayloadPtr = (int*) (heap.bytes + currentHeaderLocation + HEADER_SIZE + 4 + newSize);
-	*nextIsUsedPtr = 0;
-  	*nextSizeOfPayloadPtr = MEMLENGTH - (currentHeaderLocation + HEADER_SIZE + newSize + HEADER_SIZE);
-  } else {
-	// CASE 4: Create header inbetween current header and next header
-	int *nextIsUsedPtr = (int*) (heap.bytes + currentHeaderLocation + HEADER_SIZE + newSize);
-	int *nextSizeOfPayloadPtr = (int*) (heap.bytes + currentHeaderLocation + HEADER_SIZE + 4 + newSize);
-	*nextIsUsedPtr = 0;
-	*nextSizeOfPayloadPtr = nextHeaderLocation - (currentHeaderLocation + HEADER_SIZE + newSize + HEADER_SIZE);
-  }
-
-  return (isUsedPtr + HEADER_SIZE);
-}
 
 static int initialized = 0;
 
@@ -168,6 +100,53 @@ int *getHeader(void *ptr)
 	return (int *) headerPointer;
 }
 
+void *mymalloc(size_t size, char *file, int line) {
+
+    int newSize = (size + 7) & ~7;
+
+    // Holds index of current header
+    char* currentHeaderLocation = heap.bytes;
+
+	// Ensure we do not reach end of heap
+    while (currentHeaderLocation < &heap.bytes[MEMLENGTH]) {
+		// Value of isUsed in current header
+        int isUsed = *(int*) currentHeaderLocation;
+		// Value of sizeOfPayload in current header
+        int sizeOfPayload = *(int*)(currentHeaderLocation + sizeof(int));
+
+		// Header jumping: continue going to headers until free header
+        if (!(isUsed) && (sizeOfPayload >= newSize)) {
+            // If the chunk is large enough, split it if there is remaining space
+            int remainingSize = sizeOfPayload - newSize - HEADER_SIZE;
+
+            // Update values of header
+            *(int*) currentHeaderLocation = 1;
+            *(int*) (currentHeaderLocation + sizeof(int)) = newSize;
+
+            // If there's remaining space, create a new free header
+            if (remainingSize > 0) {
+                char *nextHeaderLocation = currentHeaderLocation + HEADER_SIZE + newSize;
+
+                *(int*)nextHeaderLocation = 0;
+                *(int*)(nextHeaderLocation + sizeof(int)) = remainingSize;
+            }
+
+            return currentHeaderLocation + HEADER_SIZE; // Return pointer to user space
+        }
+
+        // Move to the next header
+        currentHeaderLocation = (char*) (nextHeader((int*) currentHeaderLocation));
+		// No more headers
+		if (currentHeaderLocation == NULL) {
+            break;
+        }
+    }
+
+    // If no suitable chunk was found
+    fprintf(stderr, "Unable to allocate %zu bytes (%s:%d)\n", size, file, line);
+    return NULL;
+}
+
 void myfree(void *ptr, char *file, int line)
 {
 	if(!initialized)
@@ -195,8 +174,14 @@ void myfree(void *ptr, char *file, int line)
 
 int main() {
     initializeHeap();
-    char* asdf = malloc(sizeof(char) * 4088);
+    char* asdf = malloc(sizeof(char) * 48);
+	char* two = malloc (sizeof(char) * 64);
 	free(asdf);
+	char* three = malloc(sizeof(char) * 54);
+	free(two);
+	free(three);
+	char* four = malloc(sizeof(char) * 4088);
+	free(four);
     // printf("%s\n%s\n", test, jkli);
     return 0;
 }
