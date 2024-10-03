@@ -25,6 +25,36 @@ char isUsedChunk(void *ptr);
 int *nextHeader(int *header);
 int *prevHeader(int *header);
 int *getHeader(void *ptr);
+void detectLeak();
+
+// Detect the amount of objects left in heap at the end of program along with amount of bytes
+void detectLeak() {
+	char* currentHeaderLocation = heap.bytes;
+
+	// Get values from header
+	int isUsed = *(int*) currentHeaderLocation;
+	int sizeOfPayload = *(int*) (currentHeaderLocation + sizeof(int));
+
+	// Track bytes leaked and objects leaked
+	int bytesLeaked = 0;
+	int objectsLeaked = 0;
+	
+	// Header jumping till the end of heap
+	while (currentHeaderLocation != NULL) {
+		isUsed = *(int*) currentHeaderLocation;
+		sizeOfPayload = *(int*) (currentHeaderLocation + sizeof(int));
+		if (isUsed) {
+			bytesLeaked = sizeOfPayload;
+			objectsLeaked++;
+		}
+
+		currentHeaderLocation = (char*) (nextHeader((int*) currentHeaderLocation));
+	}
+
+	if (bytesLeaked || objectsLeaked) {
+		fprintf(stderr, "mymalloc: %d bytes leaked in %d objects\n", bytesLeaked, objectsLeaked);
+	}
+}
 
 /* Sets initialized equal to 1.
 Creates a chunk that occupies the entirety of heap.bytes. */
@@ -34,6 +64,7 @@ void initializeHeap()
 	int *header = (int *) heap.bytes;
 	header[USED] = 0;
 	header[SIZE_OF_CHUNK] = MEMLENGTH - HEADER_SIZE;
+	atexit(detectLeak);
 }
 
 /* Coalesces the chunks corresponding to prevHeader and nextHeader.
@@ -135,7 +166,7 @@ void *mymalloc(size_t size, char *file, int line) {
                 *(int*) nextHeaderLocation = 0;
                 *(int*) (nextHeaderLocation + sizeof(int)) = remainingSize;
             }
-			
+
             return currentHeaderLocation + HEADER_SIZE;
         }
 
