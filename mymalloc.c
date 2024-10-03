@@ -101,8 +101,13 @@ int *getHeader(void *ptr)
 }
 
 void *mymalloc(size_t size, char *file, int line) {
+	// Ensure heap is initalized
+	if (!initialized) {
+		initializeHeap();
+	}
 
-    int newSize = (size + 7) & ~7;
+	// Resized size to be a multiple of 8
+    size_t newSize = (size + 7) & ~7;
 
     // Holds index of current header
     char* currentHeaderLocation = heap.bytes;
@@ -112,7 +117,7 @@ void *mymalloc(size_t size, char *file, int line) {
 		// Value of isUsed in current header
         int isUsed = *(int*) currentHeaderLocation;
 		// Value of sizeOfPayload in current header
-        int sizeOfPayload = *(int*)(currentHeaderLocation + sizeof(int));
+        int sizeOfPayload = *(int*) (currentHeaderLocation + sizeof(int));
 
 		// Header jumping: continue going to headers until free header
         if (!(isUsed) && (sizeOfPayload >= newSize)) {
@@ -127,11 +132,11 @@ void *mymalloc(size_t size, char *file, int line) {
             if (remainingSize > 0) {
                 char *nextHeaderLocation = currentHeaderLocation + HEADER_SIZE + newSize;
 
-                *(int*)nextHeaderLocation = 0;
-                *(int*)(nextHeaderLocation + sizeof(int)) = remainingSize;
+                *(int*) nextHeaderLocation = 0;
+                *(int*) (nextHeaderLocation + sizeof(int)) = remainingSize;
             }
-
-            return currentHeaderLocation + HEADER_SIZE; // Return pointer to user space
+			
+            return currentHeaderLocation + HEADER_SIZE;
         }
 
         // Move to the next header
@@ -170,18 +175,4 @@ void myfree(void *ptr, char *file, int line)
 	{
 		coalesce(prev, header);
 	}
-}
-
-int main() {
-    initializeHeap();
-    char* asdf = malloc(sizeof(char) * 48);
-	char* two = malloc (sizeof(char) * 64);
-	free(asdf);
-	char* three = malloc(sizeof(char) * 54);
-	free(two);
-	free(three);
-	char* four = malloc(sizeof(char) * 4088);
-	free(four);
-    // printf("%s\n%s\n", test, jkli);
-    return 0;
 }
