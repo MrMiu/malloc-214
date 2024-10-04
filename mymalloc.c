@@ -44,7 +44,7 @@ void detectLeak() {
 		isUsed = *(int*) currentHeaderLocation;
 		sizeOfPayload = *(int*) (currentHeaderLocation + sizeof(int));
 		if (isUsed) {
-			bytesLeaked = sizeOfPayload;
+			bytesLeaked += sizeOfPayload;
 			objectsLeaked++;
 		}
 
