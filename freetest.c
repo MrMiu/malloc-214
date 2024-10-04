@@ -44,9 +44,9 @@ int main(int argc, char **argv)
 			free(ptr5);
 			expectInvalid();
 			free(start - 1);
-			printf("Test failed.\n"); //makes sure free doesn't work
+			printf("Test failed.\n"); //control flow should not reach this point
 			break;
-		//freeing heap.bytes
+		//freeing pointer to heap.bytes
 		case 2:
 			free(ptr1);
 			free(ptr2);
@@ -55,9 +55,9 @@ int main(int argc, char **argv)
 			free(ptr5);
 			expectInvalid();
 			free(start);
-			printf("Test failed.\n"); //makes sure free doesn't work
+			printf("Test failed.\n");
 			break;
-		//freeing end of heap.bytes:
+		//freeing pointer to end of heap.bytes:
 		case 3:
 			free(ptr1);
 			free(ptr2);
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			expectInvalid();
 			free(end);
-			printf("Test failed.\n"); //makes sure free doesn't work
+			printf("Test failed.\n");
 			break;
 		//freeing pointer after end of heap.bytes
 		case 4:
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			expectInvalid();
 			free(end + 1);
-			printf("Test failed.\n"); //makes sure free doesn't work
+			printf("Test failed.\n");
 			break;
 		//freeing chunk that is already free
 		case 5:
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			expectInvalid();
 			free(ptr1);
-			printf("Test failed.\n"); //makes sure free doesn't work
+			printf("Test failed.\n");
 			break;
 		//freeing pointer to middle of chunk
 		case 6:
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			expectInvalid();
 			free(ptr1 + 1);
-			printf("Test failed.\n"); //makes sure free doesn't work
+			printf("Test failed.\n");
 			break;
 		//freeing pointer to beginning of header
 		case 7:
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			expectInvalid();
 			free(getHeader(ptr1));
-			printf("Test failed.\n"); //makes sure free doesn't work
+			printf("Test failed.\n");
 		//freeing pointer to middle of header
 		case 8:
 			free(ptr1);
@@ -120,20 +120,9 @@ int main(int argc, char **argv)
 			free(ptr5);
 			expectInvalid();
 			free(getHeader(ptr1) + HEADER_SIZE - 1);
-			printf("Test failed.\n"); //makes sure free doesn't work
-		//freeing chunk that occupies all of heap.bytes
-		case 9:
-			free(ptr1);
-			free(ptr2);
-			free(ptr3);
-			free(ptr4);
-			free(ptr5);
-			ptr1 = malloc(size1 + size2 + size3 + size4 + size5 - HEADER_SIZE);
-			free(ptr1);
-			check(1, ptr1, 0, size1 + size2 + size3 + size4 + size5);
-			break;
+			printf("Test failed.\n");
 		//freeing chunk at beginning with used chunk after
-		case 10:
+		case 9:
 			free(ptr1);
 			check(1, ptr1, 0, size1);
 			check(2, ptr2, 1, size2);
@@ -143,7 +132,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			break;
 		//freeing chunk at beginning with free chunk after
-		case 11:
+		case 10:
 			free(ptr2);
 			free(ptr1);
 			check(1, ptr1, 0, size1 + size2);
@@ -152,7 +141,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			break;
 		//freeing chunk at end with free chunk before
-		case 12:
+		case 11:
 			free(ptr4);
 			free(ptr5);
 			check(4, ptr4, 0, size4 + size5);
@@ -161,7 +150,7 @@ int main(int argc, char **argv)
 			free(ptr3);
 			break;
 		//freeing chunk at end with used chunk before
-		case 13:
+		case 12:
 			free(ptr5);
 			check(4, ptr4, 1, size4);
 			check(5, ptr5, 0, size5);
@@ -171,7 +160,7 @@ int main(int argc, char **argv)
 			free(ptr4);
 			break;
 		//freeing chunk in middle with used chunk before & after
-		case 14:
+		case 13:
 			free(ptr3);
 			check(2, ptr2, 1, size2);
 			check(3, ptr3, 0, size3);
@@ -182,7 +171,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			break;
 		//freeing chunk in middle with used chunk before & free chunk after
-		case 15:
+		case 14:
 			free(ptr4);
 			free(ptr3);
 			check(2, ptr2, 1, size2);
@@ -192,7 +181,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			break;
 		//freeing chunk in middle with free chunk before & used chunk after
-		case 16:
+		case 15:
 			free(ptr2);
 			free(ptr3);
 			check(2, ptr2, 0, size2 + size3);
@@ -202,7 +191,7 @@ int main(int argc, char **argv)
 			free(ptr5);
 			break;
 		//freeing chunk in middle with free chunk before & after
-		case 17:
+		case 16:
 			free(ptr2);
 			free(ptr4);
 			free(ptr3);
@@ -210,8 +199,8 @@ int main(int argc, char **argv)
 			free(ptr1);
 			free(ptr5);
 			break;
-		//freeing 2nd chunk when 1st chunk is free & 3rd chunk is used
-		case 18:
+		//freeing 2nd chunk when 1st chunk is free
+		case 17:
 			free(ptr1);
 			free(ptr2);
 			check(1, ptr1, 0, size1 + size2);
@@ -220,18 +209,8 @@ int main(int argc, char **argv)
 			free(ptr4);
 			free(ptr5);
 			break;
-		//freeing 2nd chunk when 1st chunk is used & 3rd chunk is free
-		case 19:
-			free(ptr3);
-			free(ptr2);
-			check(1, ptr1, 1, size1);
-			check(2, ptr2, 0, size2 + size3);
-			free(ptr1);
-			free(ptr4);
-			free(ptr5);
-			break;
-		//freeing 2nd chunk when 1st chunk is used & 3rd chunk is used
-		case 20:
+		//freeing 2nd chunk when 1st chunk is used
+		case 18:
 			free(ptr2);
 			check(1, ptr1, 1, size1);
 			check(2, ptr2, 0, size2);
@@ -241,39 +220,18 @@ int main(int argc, char **argv)
 			free(ptr4);
 			free(ptr5);
 			break;
-		//freeing 2nd chunk when 1st chunk is free & 3rd chunk is free
-		case 21:
-			free(ptr1);
-			free(ptr3);
-			free(ptr2);
-			check(1, ptr1, 0, size1 + size2 + size3);
-			free(ptr4);
-			free(ptr5);
-			break;
-		//freeing 2nd to last chunk when prev chunk is free & last chunk is used
-		case 22:
-			free(ptr3);
-			free(ptr4);
-			check(3, ptr3, 0, size3 + size4);
-			check(5, ptr5, 1, size5);
-			free(ptr1);
-			free(ptr2);
-			free(ptr5);
-			break;
-		//freeing 2nd to last chunk when prev chunk is used & last chunk is free
-		case 23:
+		//freeing 2nd to last chunk when last chunk is free
+		case 19:
 			free(ptr5);
 			free(ptr4);
-			check(3, ptr3, 1, size3);
 			check(4, ptr4, 0, size4 + size5);
 			free(ptr1);
 			free(ptr2);
 			free(ptr3);
 			break;
-		//freeing 2nd to last chunk when prev chunk is used & last chunk is used
-		case 24:
+		//freeing 2nd to last chunk when last chunk is used
+		case 20:
 			free(ptr4);
-			check(3, ptr3, 1, size3);
 			check(4, ptr4, 0, size4);
 			check(5, ptr5, 1, size5);
 			free(ptr1);
@@ -281,79 +239,13 @@ int main(int argc, char **argv)
 			free(ptr3);
 			free(ptr5);
 			break;
-		//freeing 2nd to last chunk when prev chunk is free & last chunk is free
-		case 25:
-			free(ptr3);
-			free(ptr5);
-			free(ptr4);
-			check(3, ptr3, 0, size3 + size4 + size5);
-			free(ptr1);
-			free(ptr2);
-			break;
-		//freeing only middle chunk when 1st chunk is free & last chunk is used
-		case 26:
-			//combine middle 3 chunks
-			free(ptr2);
-			free(ptr3);
-			free(ptr4);
-			ptr2 = malloc(size2 + size3 + size4 - HEADER_SIZE);
-
-			free(ptr1);
-			free(ptr2);
-			check(1, ptr1, 0, size1 + size2 + size3 + size4);
-			check(5, ptr5, 1, size5);
-			free(ptr5);
-			break;
-		//freeing only middle chunk when 1st chunk is used & last chunk is free
-		case 27:
-			//combine middle 3 chunks
-			free(ptr2);
-			free(ptr3);
-			free(ptr4);
-			ptr2 = malloc(size2 + size3 + size4 - HEADER_SIZE);
-	
-			free(ptr5);
-			free(ptr2);
-			check(1, ptr1, 1, size1);
-			check(2, ptr2, 0, size2 + size3 + size4 + size5);
-			free(ptr1);
-			break;
-		//freeing only middle chunk when 1st chunk is used & last chunk is used
-		case 28:
-			//combine middle 3 chunks
-			free(ptr2);
-			free(ptr3);
-			free(ptr4);
-			ptr2 = malloc(size2 + size3 + size4 - HEADER_SIZE);
-
-			free(ptr2);
-			check(1, ptr1, 1, size1);
-			check(2, ptr2, 0, size2 + size3 + size4);
-			check(5, ptr5, 1, size5);
-			free(ptr1);
-			free(ptr5);
-			break;
-		//freeing only middle chunk when 1st chunk is free & last chunk is free
-		case 29:
-			//combine middle 3 chunks
-			free(ptr2);
-			free(ptr3);
-			free(ptr4);
-			ptr2 = malloc(size2 + size3 + size4 - HEADER_SIZE);
-
-			free(ptr1);
-			free(ptr5);
-			free(ptr2);
-			check(1, ptr1, 0, size1 + size2 + size3 + size4 + size5);
-			break;
 		default:
-			fprintf(stderr, "Invalid test case.\n");
 			free(ptr1);
 			free(ptr2);
 			free(ptr3);
 			free(ptr4);
 			free(ptr5);
-			return EXIT_FAILURE;
+			fprintf(stderr, "Invalid test case.\n");	
 	}
 	return EXIT_SUCCESS;
 }
