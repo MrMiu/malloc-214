@@ -30,4 +30,7 @@ leaktest.o: memtest.c
 freetest.o: freetest.c
 	$(CC) $(CFLAGS) -c freetest.c
 
-mymalloc.o memtest.o leaktest.o freetest.o: mymalloc.h
+malloctest.o: malloctest.c
+	$(CC) $(CFLAGS) -c malloctest.c
+
+mymalloc.o memtest.o leaktest.o freetest.o malloctest.o: mymalloc.h
