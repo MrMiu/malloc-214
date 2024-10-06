@@ -24,8 +24,8 @@ mymalloc.o: mymalloc.c
 memtest.o: memtest.c
 	$(CC) $(CFLAGS) -c memtest.c
 
-leaktest.o: memtest.c
-	$(CC) $(CFLAGS) -c -DLEAK memtest.c -o leaktest.o
+leaktest.o: leaktest.c
+	$(CC) $(CFLAGS) -c leaktest.c
 
 freetest.o: freetest.c
 	$(CC) $(CFLAGS) -c freetest.c
