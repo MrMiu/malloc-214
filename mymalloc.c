@@ -29,26 +29,18 @@ void detectLeak();
 
 // Detect the amount of objects left in heap at the end of program along with amount of bytes
 void detectLeak() {
-	char* currentHeaderLocation = heap.bytes;
-
-	// Get values from header
-	int isUsed = *(int*) currentHeaderLocation;
-	int sizeOfPayload = *(int*) (currentHeaderLocation + sizeof(int));
-
-	// Track bytes leaked and objects leaked
+	int *currentHeader = (int *) heap.bytes;
 	int bytesLeaked = 0;
 	int objectsLeaked = 0;
 	
 	// Header jumping till the end of heap
-	while (currentHeaderLocation != NULL) {
-		isUsed = *(int*) currentHeaderLocation;
-		sizeOfPayload = *(int*) (currentHeaderLocation + sizeof(int));
-		if (isUsed) {
-			bytesLeaked += sizeOfPayload;
+	while (currentHeader != NULL) {
+		if (currentHeader[USED]) {
+			bytesLeaked += currentHeader[SIZE_OF_CHUNK];
 			objectsLeaked++;
 		}
 
-		currentHeaderLocation = (char*) (nextHeader((int*) currentHeaderLocation));
+		currentHeader = nextHeader(currentHeader);
 	}
 
 	if (bytesLeaked || objectsLeaked) {
@@ -96,7 +88,7 @@ char isUsedChunk(void *ptr)
 Returns NULL if header is the last header in heap.bytes. */
 int *nextHeader(int *header)
 {
-	char *next = (char *) header + HEADER_SIZE + header[SIZE_OF_CHUNK];
+	char *next = ((char *) header) + HEADER_SIZE + header[SIZE_OF_CHUNK];
 	if(next == heap.bytes + MEMLENGTH)
 	{
 		return NULL;
@@ -141,39 +133,34 @@ void *mymalloc(size_t size, char *file, int line) {
     size_t newSize = (size + 7) & ~7;
 
     // Holds index of current header
-    char* currentHeaderLocation = heap.bytes;
+    int *currentHeader = (int *) heap.bytes;
 
 	// Ensure we do not reach end of heap
-    while (currentHeaderLocation < &heap.bytes[MEMLENGTH]) {
-		// Value of isUsed in current header
-        int isUsed = *(int*) currentHeaderLocation;
-		// Value of sizeOfPayload in current header
-        int sizeOfPayload = *(int*) (currentHeaderLocation + sizeof(int));
+    while (currentHeader < (int *) (heap.bytes + MEMLENGTH)) {
 
 		// Header jumping: continue going to headers until free header
-        if (!(isUsed) && (sizeOfPayload >= newSize)) {
+        if (!(currentHeader[USED]) && (currentHeader[SIZE_OF_CHUNK] >= newSize)) {
             // If the chunk is large enough, split it if there is remaining space
-            int remainingSize = sizeOfPayload - newSize - HEADER_SIZE;
+            int remainingSize = currentHeader[SIZE_OF_CHUNK] - newSize - HEADER_SIZE;
 
             // Update values of header
-            *(int*) currentHeaderLocation = 1;
-            *(int*) (currentHeaderLocation + sizeof(int)) = newSize;
+            currentHeader[USED] = 1;
+            currentHeader[SIZE_OF_CHUNK] = newSize;
 
             // If there's remaining space, create a new free header
             if (remainingSize > 0) {
-                char *nextHeaderLocation = currentHeaderLocation + HEADER_SIZE + newSize;
-
-                *(int*) nextHeaderLocation = 0;
-                *(int*) (nextHeaderLocation + sizeof(int)) = remainingSize;
+                int *next = nextHeader(currentHeader);
+                next[USED] = 0;
+                next[SIZE_OF_CHUNK] = remainingSize;
             }
 
-            return currentHeaderLocation + HEADER_SIZE;
+            return ((char *) currentHeader) + HEADER_SIZE;
         }
 
         // Move to the next header
-        currentHeaderLocation = (char*) (nextHeader((int*) currentHeaderLocation));
+        currentHeader = nextHeader(currentHeader);
 		// No more headers
-		if (currentHeaderLocation == NULL) {
+		if (currentHeader == NULL) {
             break;
         }
     }
