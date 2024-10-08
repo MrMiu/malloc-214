@@ -17,6 +17,9 @@ realmalloc: memtest.c
 leakmalloc: memtest.c
 	$(CC) $(CFLAGS) -DREALMALLOC -DLEAK memtest.c -o leakrealmalloc  
 
+malloctest: malloctest.c
+	$(CC) $(CFLAGS) malloctest.c -o malloctest
+
 freetest: freetest.o mymalloc.c
 	$(CC) $(CFLAGS) freetest.o -o freetest
 
@@ -36,7 +39,4 @@ leaktest.o: leaktest.c
 freetest.o: freetest.c
 	$(CC) $(CFLAGS) -c freetest.c
 
-malloctest.o: malloctest.c
-	$(CC) $(CFLAGS) -c malloctest.c
-
-mymalloc.o memtest.o leaktest.o freetest.o malloctest.o leakmemtest.o: mymalloc.h
+mymalloc.o memtest.o leaktest.o freetest malloctest leakmemtest.o: mymalloc.h

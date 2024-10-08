@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include "mymalloc.h"
 #include "mymalloc.c"
 
 void check(int chunkNumber, void *chunk, int expectedUsed, size_t expectedSize);

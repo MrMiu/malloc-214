@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
+#include "mymalloc.h"
 #include "mymalloc.c"
 
 /* First task */
