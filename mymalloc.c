@@ -16,7 +16,6 @@ static union {
   double not_used;
 } heap;
 
-
 static int initialized = 0;
 
 void initializeHeap();
@@ -27,7 +26,81 @@ int *prevHeader(int *header);
 int *getHeader(void *ptr);
 void detectLeak();
 
-// Detect the amount of objects left in heap at the end of program along with amount of bytes
+void *mymalloc(size_t size, char *file, int line) {
+	// Ensure heap is initalized
+	if (!initialized) {
+		initializeHeap();
+	}
+
+	// Resized size to be a multiple of 8
+    size_t newSize = (size + 7) & ~7;
+
+    // Holds index of current header
+    int *currentHeader = (int *) heap.bytes;
+
+	// Ensure we do not reach end of heap
+    while (currentHeader < (int *) (heap.bytes + MEMLENGTH)) {
+
+		// Header jumping: continue going to headers until free header
+        if (!(currentHeader[USED]) && (currentHeader[SIZE_OF_CHUNK] >= newSize)) {
+            // If the chunk is large enough, split it if there is remaining space
+            int remainingSize = currentHeader[SIZE_OF_CHUNK] - newSize - HEADER_SIZE;
+
+            // Update values of header
+            currentHeader[USED] = 1;
+            currentHeader[SIZE_OF_CHUNK] = newSize;
+
+            // If there's remaining space, create a new free header
+            if (remainingSize > 0) {
+                int *next = nextHeader(currentHeader);
+                next[USED] = 0;
+                next[SIZE_OF_CHUNK] = remainingSize;
+            } else {
+				currentHeader[SIZE_OF_CHUNK] += HEADER_SIZE + remainingSize;
+			}
+
+            return ((char *) currentHeader) + HEADER_SIZE;
+        }
+
+        // Move to the next header
+        currentHeader = nextHeader(currentHeader);
+		// No more headers
+		if (currentHeader == NULL) {
+            break;
+        }
+    }
+
+    // If no suitable chunk was found
+    fprintf(stderr, "Unable to allocate %zu bytes (%s:%d)\n", size, file, line);
+    return NULL;
+}
+
+void myfree(void *ptr, char *file, int line)
+{
+	if(!initialized)
+	{
+		initializeHeap();
+	}
+	if(!isUsedChunk(ptr))
+	{
+		fprintf(stderr, "Inappropriate pointer (%s:%d)\n", file, line);
+		exit(2);
+	}
+	int *header = getHeader(ptr);
+	header[USED] = 0;
+	int *next = nextHeader(header);
+	if((next != NULL) && !next[USED])
+	{
+		coalesce(header, next);
+	}
+	int *prev = prevHeader(header);
+	if((prev != NULL) && !prev[USED])
+	{
+		coalesce(prev, header);
+	}
+}
+
+/* Detect the amount of objects left in heap at the end of program along with amount of bytes. */
 void detectLeak() {
 	int *currentHeader = (int *) heap.bytes;
 	int bytesLeaked = 0;
@@ -121,78 +194,4 @@ int *getHeader(void *ptr)
 	char *chunk = (char *) ptr;
 	char *headerPointer = chunk - HEADER_SIZE;
 	return (int *) headerPointer;
-}
-
-void *mymalloc(size_t size, char *file, int line) {
-	// Ensure heap is initalized
-	if (!initialized) {
-		initializeHeap();
-	}
-
-	// Resized size to be a multiple of 8
-    size_t newSize = (size + 7) & ~7;
-
-    // Holds index of current header
-    int *currentHeader = (int *) heap.bytes;
-
-	// Ensure we do not reach end of heap
-    while (currentHeader < (int *) (heap.bytes + MEMLENGTH)) {
-
-		// Header jumping: continue going to headers until free header
-        if (!(currentHeader[USED]) && (currentHeader[SIZE_OF_CHUNK] >= newSize)) {
-            // If the chunk is large enough, split it if there is remaining space
-            int remainingSize = currentHeader[SIZE_OF_CHUNK] - newSize - HEADER_SIZE;
-
-            // Update values of header
-            currentHeader[USED] = 1;
-            currentHeader[SIZE_OF_CHUNK] = newSize;
-
-            // If there's remaining space, create a new free header
-            if (remainingSize > 0) {
-                int *next = nextHeader(currentHeader);
-                next[USED] = 0;
-                next[SIZE_OF_CHUNK] = remainingSize;
-            } else {
-				currentHeader[SIZE_OF_CHUNK] += HEADER_SIZE + remainingSize;
-			}
-
-            return ((char *) currentHeader) + HEADER_SIZE;
-        }
-
-        // Move to the next header
-        currentHeader = nextHeader(currentHeader);
-		// No more headers
-		if (currentHeader == NULL) {
-            break;
-        }
-    }
-
-    // If no suitable chunk was found
-    fprintf(stderr, "Unable to allocate %zu bytes (%s:%d)\n", size, file, line);
-    return NULL;
-}
-
-void myfree(void *ptr, char *file, int line)
-{
-	if(!initialized)
-	{
-		initializeHeap();
-	}
-	if(!isUsedChunk(ptr))
-	{
-		fprintf(stderr, "Inappropriate pointer (%s:%d)\n", file, line);
-		exit(2);
-	}
-	int *header = getHeader(ptr);
-	header[USED] = 0;
-	int *next = nextHeader(header);
-	if((next != NULL) && !next[USED])
-	{
-		coalesce(header, next);
-	}
-	int *prev = prevHeader(header);
-	if((prev != NULL) && !prev[USED])
-	{
-		coalesce(prev, header);
-	}
 }
