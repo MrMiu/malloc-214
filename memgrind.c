@@ -187,18 +187,15 @@ void getAverageTime(void (*func)()) {
     printf("Average Elapsed Time: %zu microseconds\n", total / AMOUNT_OF_TRIALS);
 }
 
-int main(int argc, char **argv)
-{
-    if(argc < 2)
-    {
+int main(int argc, char **argv) {
+    if(argc < 2) {
         fprintf(stderr, "No test case given.\n");
         exit(EXIT_FAILURE);
     }
     int testCase = atoi(argv[1]);
 
     // Test cases pretain to workload method
-    switch(testCase)
-    {
+    switch(testCase) {
         case 1:
             getAverageTime(workloadOne);
             break;
