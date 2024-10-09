@@ -8,6 +8,8 @@ Each chunk in the heap consists of an 8 byte header followed by the payload. Eac
 Test plan:
 In addition to memgrind.c, we created test programs for our malloc, free, and leak detector functions named malloctest.c, freetest.c, and leaktest.c, respectively. Each test program can be compiled using the appropriate make command. Each test program contains several test cases and takes a single integer argument from the command line indicating the test case to be run. Some of the test programs directly include the source code of mymalloc.c rather than just the header file mymalloc.h in order to access internal functions that can read from the header of each chunk as well as constants used to determine the bounds of the heap to allow for edge case testing.
 
+The command "make" by itself will compile and link all necessary files, so the individual make commands need not be called. A warning may be given when compiling leaktest.c indicating an unused pointer, but this pointer is intentionally left unused, so the warning may be safely ignored.
+
 malloctest.c:
     HOW TO USE:
         make malloctest

@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
     int testCase = atoi(argv[1]);
-    void *ptr1, *ptr2, *ptr3, *ptr4, *ptr5;
+	void *ptr1, *ptr2, *ptr3, *ptr4, *ptr5;
     switch(testCase) {
         //no objects created
         case 1:
