@@ -152,7 +152,9 @@ void *mymalloc(size_t size, char *file, int line) {
                 int *next = nextHeader(currentHeader);
                 next[USED] = 0;
                 next[SIZE_OF_CHUNK] = remainingSize;
-            }
+            } else {
+				currentHeader[SIZE_OF_CHUNK] += HEADER_SIZE + remainingSize;
+			}
 
             return ((char *) currentHeader) + HEADER_SIZE;
         }

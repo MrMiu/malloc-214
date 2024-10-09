@@ -1,26 +1,31 @@
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wvla -fsanitize=address,undefined
 
+
 memtest: memtest.o mymalloc.o
 	$(CC) $(CFLAGS) memtest.o mymalloc.o -o memtest
 
-leakmemtest: leakmemtest.o mymalloc.o
+lmemtest: lmemtest.o mymalloc.o
 	$(CC) $(CFLAGS) leakmemtest.o mymalloc.o -o leakmemtest
+
+rmemtest: memtest.c
+	$(CC) $(CFLAGS) -DREALMALLOC memtest.c -o rmemtest
+
+lrmemtest: memtest.c
+	$(CC) $(CFLAGS) -DREALMALLOC -DLEAK memtest.c -o lrmemtest
+
+
+malloctest: malloctest.c mymalloc.c
+	$(CC) $(CFLAGS) malloctest.c -o malloctest
+
+freetest: freetest.c mymalloc.c
+	$(CC) $(CFLAGS) freetest.c -o freetest
 
 leaktest: leaktest.o mymalloc.o
 	$(CC) $(CFLAGS) leaktest.o mymalloc.o -o leaktest
 
-realmalloc: memtest.c
-	$(CC) $(CFLAGS) -DREALMALLOC memtest.c -o realmalloc
-
-leakmalloc: memtest.c
-	$(CC) $(CFLAGS) -DREALMALLOC -DLEAK memtest.c -o leakrealmalloc  
-
-malloctest: malloctest.c
-	$(CC) $(CFLAGS) malloctest.c -o malloctest
-
-freetest: freetest.o mymalloc.c
-	$(CC) $(CFLAGS) freetest.o -o freetest
+memgrind: memgrind.c mymalloc.c
+	$(CC) $(CFLAGS) memgrind.c -o memgrind
 
 
 mymalloc.o: mymalloc.c
@@ -29,13 +34,10 @@ mymalloc.o: mymalloc.c
 memtest.o: memtest.c
 	$(CC) $(CFLAGS) -c memtest.c
 
-leakmemtest.o: memtest.c
-	$(CC) $(CFLAGS) -c -DLEAK memtest.c -o leakmemtest.o
+lmemtest.o: memtest.c
+	$(CC) $(CFLAGS) -c -DLEAK memtest.c -o lmemtest.o
 
 leaktest.o: leaktest.c
 	$(CC) $(CFLAGS) -c leaktest.c
 
-freetest.o: freetest.c
-	$(CC) $(CFLAGS) -c freetest.c
-
-mymalloc.o memtest.o leaktest.o freetest malloctest leakmemtest.o: mymalloc.h
+mymalloc.o memtest.o lmemtest.o leaktest.o malloctest freetest memgrind: mymalloc.h
