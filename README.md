@@ -168,7 +168,3 @@ memgrind.c:
             The test case mentioned is mainly to test how fast coalesce works in our free.
             By creating multiple gaps within a full heap, and then freeing objects starting
             from the middle, that will maximize the amount of coalesce within our heap.
-
-OTHER THINGS TO WRITE:
-Header Size = 8 bytes.
-Minimum-sized Chunk = 16 bytes. 
