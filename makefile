@@ -1,7 +1,6 @@
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wvla -fsanitize=address,undefined
 
-
 memtest: memtest.o mymalloc.o
 	$(CC) $(CFLAGS) memtest.o mymalloc.o -o memtest
 
