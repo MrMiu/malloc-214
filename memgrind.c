@@ -190,15 +190,15 @@ void getAverageTime(void (*func)()) {
 int main(int argc, char **argv)
 {
     if(argc < 2)
-	{
-		fprintf(stderr, "No test case given.\n");
-		exit(EXIT_FAILURE);
-	}
-	int testCase = atoi(argv[1]);
+    {
+        fprintf(stderr, "No test case given.\n");
+        exit(EXIT_FAILURE);
+    }
+    int testCase = atoi(argv[1]);
 
     // Test cases pretain to workload method
-	switch(testCase)
-	{
+    switch(testCase)
+    {
         case 1:
             getAverageTime(workloadOne);
             break;
@@ -218,6 +218,6 @@ int main(int argc, char **argv)
             fprintf(stderr, "Invalid test case.\n");
             return EXIT_FAILURE;
     }
-	    
+        
     return EXIT_SUCCESS;
 }

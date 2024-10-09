@@ -7,19 +7,16 @@
 void check(int chunkNumber, void *chunk, int expectedUsed, size_t expectedSize);
 void expectInvalid(); 
 
-int main(int argc, char **argv)
-{
-	if(argc < 2)
-	{
-		fprintf(stderr, "No test case given.\n");
-		exit(EXIT_FAILURE);
-	}
-	int testCase = atoi(argv[1]);
+int main(int argc, char **argv) {
+    if(argc < 2) {
+        fprintf(stderr, "No test case given.\n");
+        exit(EXIT_FAILURE);
+    }
+    int testCase = atoi(argv[1]);
 
-	switch(testCase)
-	{
+    switch(testCase) {
         // Allocate maximum-sized chunk for entire heap
-		case 1:
+        case 1:
             void* ptr1 = malloc(MEMLENGTH - HEADER_SIZE);
             check(1, ptr1, 1, MEMLENGTH);
             free(ptr1);
@@ -147,32 +144,29 @@ int main(int argc, char **argv)
         default:
             fprintf(stderr, "Invalid test case.\n");
     }
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 /*Checks to see if chunk has the expected used status and size.*/
 void check(int chunkNumber, void *chunk, int expectedUsed, size_t expectedSize) {
-	int *header = getHeader(chunk);
-	int isUsed = header[USED];
-	size_t chunkSize = header[SIZE_OF_CHUNK];
-	expectedSize -= HEADER_SIZE;
-	printf("Chunk %d:\n", chunkNumber);
-	printf("Expected used: %d\n", expectedUsed);
-	printf("Actual used: %d\n", isUsed);
-	printf("Expected size: %zu\n", expectedSize);
-	printf("Actual size: %zu\n", chunkSize);
-	if((isUsed == expectedUsed) && (chunkSize == expectedSize))
-	{
-		printf("Test passed.\n\n");
-	}
-	else 
-	{
-		printf("Test failed.\n\n");
-	}	
+    int *header = getHeader(chunk);
+    int isUsed = header[USED];
+    size_t chunkSize = header[SIZE_OF_CHUNK];
+    expectedSize -= HEADER_SIZE;
+    printf("Chunk %d:\n", chunkNumber);
+    printf("Expected used: %d\n", expectedUsed);
+    printf("Actual used: %d\n", isUsed);
+    printf("Expected size: %zu\n", expectedSize);
+    printf("Actual size: %zu\n", chunkSize);
+    if((isUsed == expectedUsed) && (chunkSize == expectedSize)) {
+        printf("Test passed.\n\n");
+    } else {
+        printf("Test failed.\n\n");
+    }   
 }
 
 /*Prints a message indicating that an error message is expected.*/
 void expectInvalid(size_t size) {
     printf("Expected: Unable to allocate %zu bytes\n", size);
-	printf("Expected: Inappropriate pointer.\n");
+    printf("Expected: Inappropriate pointer.\n");
 }
