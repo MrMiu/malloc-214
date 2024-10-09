@@ -1,0 +1,88 @@
+Malloc test plan:
+HOW TO USE:
+    ./malloctest <TEST CASE>
+
+SUMMARY:
+    The goal of the malloc test plan was to test every edge case possible when using malloc,
+    ensuring the method works as intended in every case.
+
+TEST CASE 1:
+    Allocate one singular, big chunk that fills up the heap
+TEST CASE 2:
+    Allocate the maximum amount of chunks possible in the heap. 
+    This would amount to 32, 16-byte chunks
+TEST CASE 3: 
+    Case where user tries to allocate a chunk that is too large for the heap.
+    Result should lead to an error
+TEST CASE 4:
+    Case where user tries to allocate a chunk that is too large when there is supposed
+    space at the end of the heap. 
+    PROCESS: 
+        Allocates a big chunk that leaves 8 bytes at the end
+        of the heap, then try to allocate another, 1 byte chunk. Fails as minimum size of
+    chunk is 16 bytes
+TEST CASE 5:
+    Case where user tries to allocate a chunk that is too large when the only space
+    avaliable for the chunk is in-between two other chunks. 
+    PROCESS:
+        Allocates 3, 16-byte (minimum sized) chunks into the heap. Then allocate a chunk to fill the rest of the heap. Free
+        the second, small chunk in-between the two other 16-byte chunks. Finally, attempt to
+        allocate a chunk which is larger than the space in-between the two, minimum-sized chunks
+TEST CASE 6:    
+    Case which checks that malloc will create header at end of chunk given the space.
+    PROCESS:
+        Allocate a minimum-sized chunk, then check to make sure the header after the chunk
+        has the proper information (used and payload).
+TEST CASE 7:
+    Case where header creates a header at the end of the heap (with size 0 payload)
+    PROCESS:
+        Create a large chunk which gives 16 bytes for the heap. Malloc will then
+        create a header at the end of the chunk which will have a payload size 0
+        as 8-bytes are the minimum for a header, meaning no other objects can be
+        added. 
+TEST CASE 8:
+    Ensure that header does not override other headers when chunks are connected
+    PROCESS:
+        Create 2, 16-byte (minimum sized) chunks. Free the first chunk before adding a
+        third, 16-byte chunk. Ensure that the third chunk is properly placed at the beginning
+        of the heap as a means to ensure header information is correct.
+TEST CASE 9:
+    Ensure writing to objects writes to the correct location
+    PROCESS:
+        Create 8, 504-byte (maximum sized for 8) chunks. Write a distinct byte-pattern for
+        the 8 bytes while ensuring that the byte pattern for each chunk is correct.
+
+Memgrind test plan:
+HOW TO USE:
+    HOW TO USE:
+    ./memgrind <TEST CASE>
+
+TEST CASE 1:
+    malloc() and immediately free() a 1-byte object, 120 times.
+TEST CASE 2:
+    Use malloc() to get 120 1-byte objects, storing the pointers in an array, 
+    then use free() to deallocate the chunks.
+TEST CASE 3:
+    Create an array of 120 pointers. Repeatedly make a random choice between 
+    allocating a 1-byte object and adding the pointer to the array 
+    and deallocating a previously allocated object (if any), until you have allocated 120 times. 
+    Deallocate any remaining objects.
+TEST CASE 4:
+    Create 5 pointers in random positions with random sizes,
+    then deallocate those 5 pointers in a random order.
+    PURPOSE:
+        This was created as a more consistant version of TEST CASE 3, while still
+        involving the creation and removal of multiple objects. This is also able
+        to deallocate objects in-between other objects which our implementation of
+        TEST CASE 3 cannot do.
+TEST CASE 5:
+    Allocate 120 objects that are 1 byte, then free every other object from the heap
+    before free the second half from the middle towards the two ends of the heap
+    PURPOSE:
+        The test case mentioned is mainly to test how fast coalesce works in our free.
+        By creating multiple gaps within a full heap, and then freeing objects starting
+        from the middle, that will maximize the amount of coalesce within our heap.
+
+OTHER THINGS TO WRITE:
+Header Size = 8 bytes.
+Minimum-sized Chunk = 16 bytes. 

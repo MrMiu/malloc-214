@@ -95,7 +95,7 @@ void workloadThree() {
 /* Fourth task */
 
 /* Create 5 pointers in random positions with random sizes,
-   then deallocate those 5 pointers in a random order for 120 times. */
+   then deallocate those 5 pointers in a random order */
 
 /* 
 *  Required in workload four in order to randomly free pointers.
@@ -143,7 +143,8 @@ void workloadFour() {
 /*
 * Allocate 120 objects that are 1 byte, 
 * then free every other object from the heap
-* before freeing the other half
+* before free the second half from the middle
+* towards the two ends of the heap
 */
 void workloadFive() {
     void* ptrs[120];
@@ -155,8 +156,16 @@ void workloadFive() {
         free(ptrs[i]);
     }
     // Free the second half
-    for (int i = 1; i < 120; i+=2) {
+    // Free edge cases for ptrs
+    free(ptrs[59]);
+    free(ptrs[119]);
+
+    // Loop from middle towards end of heap
+    short j = 61;
+    for (short i = 57; i >= 1; i-=2) {
         free(ptrs[i]);
+        free(ptrs[j]);
+        j+=2;
     }
 }
 
