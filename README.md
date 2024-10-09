@@ -1,5 +1,5 @@
 # malloc-214
-Alexander Ruan (netID: Ajr331)
+Alexander Ruan (netID: ajr331)
 Sanjeev Harikrishnan (netID: sh1720)
 
 Design:
