@@ -12,8 +12,8 @@
 #define MEMLENGTH 4096
 
 static union {
-  char bytes[MEMLENGTH];
-  double not_used;
+    char bytes[MEMLENGTH];
+    double not_used;
 } heap;
 
 static int initialized = 0;
